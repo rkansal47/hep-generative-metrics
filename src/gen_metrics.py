@@ -105,19 +105,17 @@ def _calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     sigma1 = np.atleast_2d(sigma1)
     sigma2 = np.atleast_2d(sigma2)
 
-    assert (
-        mu1.shape == mu2.shape
-    ), "Training and test mean vectors have different lengths"
-    assert (
-        sigma1.shape == sigma2.shape
-    ), "Training and test covariances have different dimensions"
+    assert mu1.shape == mu2.shape, "Training and test mean vectors have different lengths"
+    assert sigma1.shape == sigma2.shape, "Training and test covariances have different dimensions"
 
     diff = mu1 - mu2
 
     # Product might be almost singular
     covmean, _ = linalg.sqrtm(sigma1.dot(sigma2), disp=False)
     if not np.isfinite(covmean).all():
-        msg = f"fid calculation produces singular product; adding {eps} to diagonal of cov estimates"
+        msg = (
+            f"fid calculation produces singular product; adding {eps} to diagonal of cov estimates"
+        )
         logging.debug(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
@@ -134,9 +132,7 @@ def _calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     return diff.dot(diff) + np.trace(sigma1) + np.trace(sigma2) - 2 * tr_covmean
 
 
-def frechet_gaussian_distance(
-    X: ArrayLike, Y: ArrayLike, normalise: bool = True
-) -> float:
+def frechet_gaussian_distance(X: ArrayLike, Y: ArrayLike, normalise: bool = True) -> float:
     if normalise:
         X, Y = normalise_features(X, Y)
 
@@ -152,9 +148,7 @@ def _sqeuclidean(X: ArrayLike, Y: ArrayLike) -> np.ndarray:
     return np.sum((X - Y) ** 2, axis=1)
 
 
-def _rbf_kernel_elementwise(
-    X: ArrayLike, Y: ArrayLike, kernel_sigma: float
-) -> np.ndarray:
+def _rbf_kernel_elementwise(X: ArrayLike, Y: ArrayLike, kernel_sigma: float) -> np.ndarray:
     return np.exp(-_sqeuclidean(X, Y) / (2.0 * (kernel_sigma**2)))
 
 
@@ -168,9 +162,7 @@ def _poly_kernel_elementwise(X: ArrayLike, Y: ArrayLike, degree: int) -> np.ndar
     return (np.sum(X * Y, axis=-1) * gamma + 1.0) ** degree
 
 
-def _get_mmd_quadratic_arrays(
-    X: ArrayLike, Y: ArrayLike, kernel_func: Callable, **kernel_args
-):
+def _get_mmd_quadratic_arrays(X: ArrayLike, Y: ArrayLike, kernel_func: Callable, **kernel_args):
     XX = kernel_func(X, X, **kernel_args)
     YY = kernel_func(Y, Y, **kernel_args)
     XY = kernel_func(X, Y, **kernel_args)
@@ -212,9 +204,7 @@ def mmd_gaussian_quadratic_biased(
         X, Y = normalise_features(X, Y)
 
     gamma = 1.0 / (2.0 * (kernel_sigma**2))
-    XX, YY, XY = _get_mmd_quadratic_arrays(
-        X, Y, sklearn.metrics.pairwise.rbf_kernel, gamma=gamma
-    )
+    XX, YY, XY = _get_mmd_quadratic_arrays(X, Y, sklearn.metrics.pairwise.rbf_kernel, gamma=gamma)
     return _mmd_quadratic_biased(XX, YY, XY)
 
 
@@ -226,9 +216,7 @@ def mmd_gaussian_quadratic_unbiased(
 
     gamma = 1.0 / (2.0 * (kernel_sigma**2))
     # this can maybe be optimized - only need to calculate half of these
-    XX, YY, XY = _get_mmd_quadratic_arrays(
-        X, Y, sklearn.metrics.pairwise.rbf_kernel, gamma=gamma
-    )
+    XX, YY, XY = _get_mmd_quadratic_arrays(X, Y, sklearn.metrics.pairwise.rbf_kernel, gamma=gamma)
     return _mmd_quadratic_unbiased(XX, YY, XY)
 
 
@@ -264,9 +252,7 @@ def mmd_poly_linear(X: ArrayLike, Y: ArrayLike, degree: int = 3, normalise: bool
 
 
 # https://github.com/clovaai/generative-evaluation-prdc/blob/master/prdc/prdc.py
-def _compute_pairwise_distance(
-    data_x: ArrayLike, data_y: ArrayLike = None
-) -> np.ndarray:
+def _compute_pairwise_distance(data_x: ArrayLike, data_y: ArrayLike = None) -> np.ndarray:
     """
     Args:
         data_x: numpy.ndarray([N, feature_dim], dtype=np.float32)
@@ -321,9 +307,7 @@ def pr(
         if normalise:
             X = normalise_features(X)
 
-        X_nearest_neighbour_distances = compute_nearest_neighbour_distances(
-            X, nearest_k
-        )
+        X_nearest_neighbour_distances = compute_nearest_neighbour_distances(X, nearest_k)
     else:
         if isinstance(X_nearest_neighbour_distances, dict):
             X_nearest_neighbour_distances = X_nearest_neighbour_distances[len(Y)]
@@ -335,15 +319,11 @@ def pr(
     distance_XY = _compute_pairwise_distance(X, Y)
 
     precision = (
-        (distance_XY < np.expand_dims(X_nearest_neighbour_distances, axis=1))
-        .any(axis=0)
-        .mean()
+        (distance_XY < np.expand_dims(X_nearest_neighbour_distances, axis=1)).any(axis=0).mean()
     )
 
     recall = (
-        (distance_XY < np.expand_dims(Y_nearest_neighbour_distances, axis=0))
-        .any(axis=1)
-        .mean()
+        (distance_XY < np.expand_dims(Y_nearest_neighbour_distances, axis=0)).any(axis=1).mean()
     )
 
     return precision, recall
@@ -361,9 +341,7 @@ def dc(
         if normalise:
             X = normalise_features(X)
 
-        X_nearest_neighbour_distances = compute_nearest_neighbour_distances(
-            X, nearest_k
-        )
+        X_nearest_neighbour_distances = compute_nearest_neighbour_distances(X, nearest_k)
     else:
         if isinstance(X_nearest_neighbour_distances, dict):
             X_nearest_neighbour_distances = X_nearest_neighbour_distances[len(Y)]
