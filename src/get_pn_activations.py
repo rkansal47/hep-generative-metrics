@@ -19,10 +19,12 @@ activations = []
 for i, jets_batch in tqdm(
     enumerate(jets_loaded), total=len(jets_loaded), desc="Running ParticleNet"
 ):
-    activations.append(jetnet.evaluation.particlenet._ParticleNet(jets_batch.to("cuda"), ret_activations=True).cpu().detach().numpy())
+    activations.append(
+        jetnet.evaluation.particlenet._ParticleNet(jets_batch.to("cuda"), ret_activations=True)
+        .cpu()
+        .detach()
+        .numpy()
+    )
 
 activations = np.concatenate(activations, axis=0)
-
 np.save("activations", activations)
-
-
