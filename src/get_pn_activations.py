@@ -9,7 +9,7 @@ jets = JetNet(
     data_dir="/Users/raghav/Documents/CERN/gen-models/MPGAN/datasets/",
     split_fraction=[1, 0, 0],
     jet_features=None,
-    particle_normalisation=JetNet.fpnd_norm
+    particle_normalisation=JetNet.fpnd_norm,
 )
 
 jets_loaded = DataLoader(jets, shuffle=False, batch_size=256, pin_memory=True)
@@ -18,8 +18,11 @@ activations = []
 for i, jets_batch in tqdm(
     enumerate(jets_loaded), total=len(jets_loaded), desc="Running ParticleNet"
 ):
-    activations.append(jetnet.evaluation.particlenet._ParticleNet(jets_batch.to("cuda"), ret_activations=True).cpu().detach().numpy())
+    activations.append(
+        jetnet.evaluation.particlenet._ParticleNet(jets_batch.to("cuda"), ret_activations=True)
+        .cpu()
+        .detach()
+        .numpy()
+    )
 
 activations = np.concatenate(activations, axis=0)
-
-
