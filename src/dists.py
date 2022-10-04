@@ -15,6 +15,6 @@ class two_multivariate_normals:
 
     def rvs(self, num_samples):
         weights = np.random.rand(num_samples)
-        return np.tile((weights <= 0.5), (2, 1)).T * self.mvn1.rvs(num_samples) + np.tile(
-            (weights > 0.5), (2, 1)
-        ).T * self.mvn2.rvs(num_samples)
+        return np.tile((weights <= 0.5), (2, 1)).T * self.mvn1.rvs(
+            num_samples
+        ) + np.tile((weights > 0.5), (2, 1)).T * self.mvn2.rvs(num_samples)
