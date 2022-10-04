@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     18640,        541]
-NotebookOptionsPosition[     16682,        500]
-NotebookOutlinePosition[     17073,        516]
-CellTagsIndexPosition[     17030,        513]
+NotebookDataLength[     19449,        566]
+NotebookOptionsPosition[     17392,        524]
+NotebookOutlinePosition[     17788,        540]
+CellTagsIndexPosition[     17745,        537]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -471,9 +471,11 @@ Cell[TextData[{
  "cov(x, y) = ",
  Cell[BoxData[
   FormBox[
-   SuperscriptBox["m", "2"], TraditionalForm]],
+   RowBox[{
+    RowBox[{"m", "^", "2"}], "+", 
+    SubscriptBox["s", "xy"]}], TraditionalForm]],
   FormatType->"TraditionalForm",ExpressionUUID->
-  "ed6a615e-5a72-4feb-a31c-5a31f04b4cd9"],
+  "c91b3a1b-84a0-4c86-8e10-fd5728f3aea6"],
  "\n",
  Cell[BoxData[
   FormBox[
@@ -481,25 +483,47 @@ Cell[TextData[{
     SuperscriptBox["s", "2"], "=", 
     RowBox[{
      SuperscriptBox["sig", "2"], "+", 
-     SuperscriptBox["m", "2"]}]}], TraditionalForm]],
-  FormatType->"TraditionalForm",ExpressionUUID->
+     SuperscriptBox["m", "2"]}]}], TraditionalForm]],ExpressionUUID->
   "12ad4db2-9b57-4598-908f-52e5e8f4f823"],
  "\nm = 1/2\n",
  Cell[BoxData[
   FormBox[
    RowBox[{
     SuperscriptBox["sig", "2"], "=", 
-    RowBox[{"3", "/", "4"}]}], TraditionalForm]],
-  FormatType->"TraditionalForm",ExpressionUUID->
+    RowBox[{"3", "/", "4"}]}], TraditionalForm]],ExpressionUUID->
   "89aa4806-b2fa-4850-a9e8-59372eb13821"]
 }], "Text",
  CellChangeTimes->{{3.871031474755768*^9, 3.871031499143711*^9}, {
-  3.871031532629744*^9, 
-  3.871031621729425*^9}},ExpressionUUID->"ca848a4a-b5d8-4968-af5a-\
-cfed7a4eb37c"]
+  3.871031532629744*^9, 3.871031621729425*^9}, {3.873874974195117*^9, 
+  3.873875005623746*^9}},ExpressionUUID->"ca848a4a-b5d8-4968-af5a-\
+cfed7a4eb37c"],
+
+Cell[TextData[{
+ "m = 3/4\n",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox["s", "xy"], "=", 
+    RowBox[{
+     RowBox[{"-", "5"}], "/", "16"}]}], TraditionalForm]],
+  FormatType->"TraditionalForm",ExpressionUUID->
+  "7a354fb6-549b-4c95-9518-8fbcc6082fdf"],
+ "\n",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox["sig", "2"], "=", 
+    RowBox[{"7", "/", "16"}]}], TraditionalForm]],
+  FormatType->"TraditionalForm",ExpressionUUID->
+  "7f3bf4c0-65d6-4e6d-b19b-a933b47cf588"]
+}], "Text",
+ CellChangeTimes->{{3.873874796357973*^9, 3.873874849163459*^9}, {
+  3.873875028482709*^9, 
+  3.873875045407908*^9}},ExpressionUUID->"6f9b52fa-4636-4c87-b7e0-\
+fa104440b9ef"]
 },
-WindowSize->{808, 911},
-WindowMargins->{{4, Automatic}, {Automatic, 4}},
+WindowSize->{1792, 1067},
+WindowMargins->{{58, Automatic}, {Automatic, 106}},
 FrontEndVersion->"12.1 for Mac OS X x86 (64-bit) (June 19, 2020)",
 StyleDefinitions->"Default.nb",
 ExpressionUUID->"b665f6db-79da-4693-b8bf-7abcab4ca78a"
@@ -535,17 +559,16 @@ Cell[7521, 230, 399, 9, 30, "Input",ExpressionUUID->"4ba79348-13ae-453f-953f-9bf
 Cell[7923, 241, 1796, 52, 88, "Output",ExpressionUUID->"bcc07338-48c2-4570-a12d-c2167af8682d"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[9756, 298, 898, 24, 90, "Input",ExpressionUUID->"a218a90b-888c-4c1e-bcd2-23daf69fdf14"],
-Cell[10657, 324, 3721, 104, 214, "Output",ExpressionUUID->"e5e26af9-1661-44a1-bf70-5fefa60e8342"]
+Cell[9756, 298, 898, 24, 47, "Input",ExpressionUUID->"a218a90b-888c-4c1e-bcd2-23daf69fdf14"],
+Cell[10657, 324, 3721, 104, 106, "Output",ExpressionUUID->"e5e26af9-1661-44a1-bf70-5fefa60e8342"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[14415, 433, 1027, 25, 56, "Input",ExpressionUUID->"7101a943-8e88-4a5e-a25f-fdf4d1448337"],
+Cell[14415, 433, 1027, 25, 33, "Input",ExpressionUUID->"7101a943-8e88-4a5e-a25f-fdf4d1448337"],
 Cell[15445, 460, 321, 6, 37, "Output",ExpressionUUID->"1813edf7-aa7b-42d7-8af4-9692a5353b23"]
 }, Open  ]],
-Cell[15781, 469, 897, 29, 96, "Text",ExpressionUUID->"ca848a4a-b5d8-4968-af5a-cfed7a4eb37c"]
+Cell[15781, 469, 926, 29, 99, "Text",ExpressionUUID->"ca848a4a-b5d8-4968-af5a-cfed7a4eb37c"],
+Cell[16710, 500, 678, 22, 77, "Text",ExpressionUUID->"6f9b52fa-4636-4c87-b7e0-fa104440b9ef"]
 }
 ]
 *)
-
-(* End of internal cache information *)
 

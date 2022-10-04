@@ -4,8 +4,7 @@ Collection of methods for calculating distances and divergences between two dist
 Author: Raghav Kansal
 """
 
-from http.client import INSUFFICIENT_STORAGE
-from multiprocessing.dummy import Array
+
 from typing import Callable
 from numpy.typing import ArrayLike
 
@@ -177,7 +176,11 @@ def _mmd_quadratic_biased(XX: ArrayLike, YY: ArrayLike, XY: ArrayLike):
 def _mmd_quadratic_unbiased(XX: ArrayLike, YY: ArrayLike, XY: ArrayLike):
     m, n = XX.shape[0], YY.shape[0]
     # subtract diagonal 1s
-    return (XX.sum() - m) / (m * (m - 1)) + (YY.sum() - n) / (n * (n - 1)) - 2 * XY.sum() / (m * n)
+    return (
+        (XX.sum() - XX.trace()) / (m * (m - 1))
+        + (YY.sum() - YY.trace()) / (n * (n - 1))
+        - 2 * XY.mean()
+    )
 
 
 def _mmd_linear(X: ArrayLike, Y: ArrayLike, kernel_func: Callable, **kernel_args):
@@ -218,13 +221,13 @@ def mmd_gaussian_quadratic_unbiased(
 
 
 def mmd_poly_quadratic_unbiased(
-    X: ArrayLike, Y: ArrayLike, dim: int = 3, normalise: bool = True
+    X: ArrayLike, Y: ArrayLike, degree: int = 3, normalise: bool = True
 ) -> float:
 
     if normalise:
         X, Y = normalise_features(X, Y)
 
-    XX, YY, XY = _get_mmd_quadratic_arrays(X, Y, _poly_kernel_pairwise, dim=dim)
+    XX, YY, XY = _get_mmd_quadratic_arrays(X, Y, _poly_kernel_pairwise, degree=degree)
     return _mmd_quadratic_unbiased(XX, YY, XY)
 
 
@@ -239,13 +242,13 @@ def mmd_gaussian_linear(
     return _mmd_linear(X, Y, _rbf_kernel_elementwise, kernel_sigma=kernel_sigma)
 
 
-def mmd_poly_linear(X: ArrayLike, Y: ArrayLike, dim: int = 3, normalise: bool = True) -> float:
+def mmd_poly_linear(X: ArrayLike, Y: ArrayLike, degree: int = 3, normalise: bool = True) -> float:
     assert len(X) == len(Y), "Linear estimate assumes equal number of samples"
 
     if normalise:
         X, Y = normalise_features(X, Y)
 
-    return _mmd_linear(X, Y, _poly_kernel_elementwise, dim=dim)
+    return _mmd_linear(X, Y, _poly_kernel_elementwise, degree=degree)
 
 
 # https://github.com/clovaai/generative-evaluation-prdc/blob/master/prdc/prdc.py
