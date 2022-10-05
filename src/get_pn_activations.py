@@ -27,8 +27,4 @@ for i, jets_batch in tqdm(
     )
 
 activations = np.concatenate(activations, axis=0)
-<<<<<<< HEAD
 np.save("/graphganvol/hep-generative-metrics/pnet_activations.npy", activations)
-=======
-np.save("activations", activations)
->>>>>>> db9a4161be41e7f069632680ae8438ddd5316d5c
