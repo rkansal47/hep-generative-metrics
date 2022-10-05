@@ -16,7 +16,7 @@ jets = JetNet(
 jets_loaded = DataLoader(jets, shuffle=False, batch_size=256, pin_memory=True)
 
 activations = []
-for i, jets_batch in tqdm(
+for i, (jets_batch, _) in tqdm(
     enumerate(jets_loaded), total=len(jets_loaded), desc="Running ParticleNet"
 ):
     activations.append(
