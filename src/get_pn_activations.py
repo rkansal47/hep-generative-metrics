@@ -6,7 +6,7 @@ import numpy as np
 
 jets = JetNet(
     "g",
-    data_dir="/Users/raghav/Documents/CERN/gen-models/MPGAN/datasets/",
+    data_dir="/graphganvol/MPGAN/datasets/",
     split_fraction=[1, 0, 0],
     jet_features=None,
     particle_normalisation=JetNet.fpnd_norm,
@@ -26,3 +26,4 @@ for i, jets_batch in tqdm(
     )
 
 activations = np.concatenate(activations, axis=0)
+np.save("/graphganvol/hep-generative-metrics/pnet_activations.npy", activations)
