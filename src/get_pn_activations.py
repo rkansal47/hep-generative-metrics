@@ -10,6 +10,7 @@ jets = JetNet(
     split_fraction=[1, 0, 0],
     jet_features=None,
     particle_normalisation=JetNet.fpnd_norm,
+    particle_features=["etarel", "phirel", "ptrel"],
 )
 
 jets_loaded = DataLoader(jets, shuffle=False, batch_size=256, pin_memory=True)
@@ -26,4 +27,8 @@ for i, jets_batch in tqdm(
     )
 
 activations = np.concatenate(activations, axis=0)
+<<<<<<< HEAD
 np.save("/graphganvol/hep-generative-metrics/pnet_activations.npy", activations)
+=======
+np.save("activations", activations)
+>>>>>>> db9a4161be41e7f069632680ae8438ddd5316d5c
