@@ -1,8 +1,8 @@
-import jetnet
 from jetnet.datasets import JetNet
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import numpy as np
+from particlenet import ParticleNet
 
 jets = JetNet(
     "g",
@@ -20,10 +20,7 @@ for i, jets_batch in tqdm(
     enumerate(jets_loaded), total=len(jets_loaded), desc="Running ParticleNet"
 ):
     activations.append(
-        jetnet.evaluation.particlenet._ParticleNet(jets_batch.to("cuda"), ret_activations=True)
-        .cpu()
-        .detach()
-        .numpy()
+        ParticleNet(jets_batch.to("cuda"), ret_activations=True).cpu().detach().numpy()
     )
 
 activations = np.concatenate(activations, axis=0)
