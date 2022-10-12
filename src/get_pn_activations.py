@@ -31,6 +31,7 @@ for key, (jets, _) in pf_dists.items():
     print(key)
 
     jets = JetNet.fpnd_norm(jets.astype(np.float32))
+    print(f"Maxes: {np.max(np.abs(jets.reshape(-1, jets.shape[-1])), axis=0)}")
     jets_loaded = DataLoader(jets, shuffle=False, batch_size=512, pin_memory=True)
 
     activations = []
