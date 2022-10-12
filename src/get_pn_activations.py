@@ -32,7 +32,8 @@ for key, (jets, _) in pf_dists.items():
     jets_loaded = DataLoader(jets, shuffle=False, batch_size=512, pin_memory=True)
 
     activations = []
-    for i, (jets_batch, _) in tqdm(
+    # for i, (jets_batch, _) in tqdm(
+    for i, jets_batch in tqdm(
         enumerate(jets_loaded), total=len(jets_loaded), desc="Running ParticleNet"
     ):
         activations.append(pnet(jets_batch.to("cuda"), ret_activations=True).cpu().detach().numpy())
