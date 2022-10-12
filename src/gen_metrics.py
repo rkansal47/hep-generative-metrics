@@ -23,8 +23,9 @@ rng = np.random.default_rng()
 
 
 def normalise_features(X: ArrayLike, Y: ArrayLike = None):
-    # TODO: best normalisation?
-    return (X, Y) if Y is not None else X
+    maxes = np.max(np.abs(X), axis=0)
+
+    return (X / maxes, Y / maxes) if Y is not None else X / maxes
 
 
 def multi_batch_evaluation(
