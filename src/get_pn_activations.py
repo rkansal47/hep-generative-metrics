@@ -6,14 +6,16 @@ import numpy as np
 from pnet.particlenet import ParticleNet
 import pickle
 
-# jets = JetNet(
-#     "g",
-#     data_dir="/graphganvol/MPGAN/datasets/",
-#     split_fraction=[1, 0, 0],
-#     jet_features=None,
-#     particle_normalisation=JetNet.fpnd_norm,
-#     particle_features=["etarel", "phirel", "ptrel"],
-# )
+jets = JetNet(
+    "g",
+    data_dir="/graphganvol/MPGAN/datasets/",
+    split_fraction=[1, 0, 0],
+    jet_features=None,
+    particle_normalisation=JetNet.fpnd_norm,
+    particle_features=["etarel", "phirel", "ptrel"],
+)
+
+print(f"Real Maxes: {np.max(np.abs(jets.reshape(-1, jets.shape[-1])), axis=0)}")
 
 # jets_loaded = DataLoader(jets, shuffle=False, batch_size=512, pin_memory=True)
 
