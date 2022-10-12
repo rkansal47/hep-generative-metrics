@@ -29,7 +29,9 @@ pnet.eval()
 
 for key, (jets, _) in pf_dists.items():
     print(key)
-    jets_loaded = DataLoader(jets.astype(np.float32), shuffle=False, batch_size=512, pin_memory=True)
+    jets_loaded = DataLoader(
+        jets.astype(np.float32), shuffle=False, batch_size=512, pin_memory=True
+    )
 
     activations = []
     # for i, (jets_batch, _) in tqdm(
