@@ -38,6 +38,5 @@ for key, (jets, _) in pf_dists.items():
     ):
         activations.append(pnet(jets_batch.to("cuda"), ret_activations=True).cpu().detach().numpy())
 
-    pnet_activations[key] = np.concatenate(activations, axis=0)
-
-np.save("/graphganvol/hep-generative-metrics/pnet_activations.npy", pnet_activations)
+    activations = np.concatenate(activations, axis=0)
+    np.save(f"/graphganvol/hep-generative-metrics/pnet_activations_{key}.npy", activations)
