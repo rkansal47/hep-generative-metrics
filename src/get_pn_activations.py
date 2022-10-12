@@ -27,7 +27,8 @@ pnet = ParticleNet(30, 3).to("cuda")
 pnet.load_state_dict(torch.load(f"pnet/pnet_state_dict.pt", map_location="cuda"))
 pnet.eval()
 
-for key, (jets, _) in pf_dists:
+for key, (jets, _) in pf_dists.items():
+    print(key)
     jets_loaded = DataLoader(jets, shuffle=False, batch_size=512, pin_memory=True)
 
     activations = []
