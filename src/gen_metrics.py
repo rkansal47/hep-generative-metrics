@@ -10,7 +10,7 @@ from numpy.typing import ArrayLike
 
 import numpy as np
 from scipy import linalg
-from scipy.spatial.distance import pdist
+from scipy.stats import wasserstein_distance
 
 import sklearn.metrics
 
@@ -63,6 +63,15 @@ def multi_batch_evaluation(
     mean_std = (np.mean(vals, axis=0), np.std(vals, axis=0))
 
     return (mean_std, times) if timing else mean_std
+
+
+def wasserstein1d(X: ArrayLike, Y: ArrayLike, normalise: bool = True) -> float:
+    assert X.shape[0] == Y.shape[0], "X and Y must have same number of samples"
+
+    if normalise:
+        X, Y = normalise_features(X, Y)
+
+    return wasserstein_distance(X, Y)
 
 
 def wasserstein(X: ArrayLike, Y: ArrayLike, normalise: bool = True) -> float:
