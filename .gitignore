@@ -1,5 +1,6 @@
 **/__pycache__
 /plots
+/classifier_trainings
 .DS_Store
 **/.DS_Store
 **/*.npy
