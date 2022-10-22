@@ -6,13 +6,13 @@ plt.rcParams.update({"font.size": 16})
 
 
 def plot_means_stds(ax: Axes, means_stds: np.ndarray, batch_sizes: list, ylims: list = None):
-    """ Plots means ± stds vs batch size
+    """Plots means ± stds vs batch size
 
     Args:
         ax (Axes): matplotlib axis on which to plot
         means_stds (np.ndarray): ``[N, 2]`` - first column is means, second column is stds
         batch_sizes (list): list of length N
-        ylims (list): plot y limits 
+        ylims (list): plot y limits
     """
     means = np.nan_to_num(means_stds[:, 0])[: len(batch_sizes)]
     stds = np.nan_to_num(means_stds[:, 1])[: len(batch_sizes)]
