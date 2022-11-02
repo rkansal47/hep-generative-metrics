@@ -5,21 +5,22 @@ Author: Raghav Kansal
 """
 
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 from numpy.typing import ArrayLike
 
 import numpy as np
 from scipy import linalg
-from scipy.stats import wasserstein_distance
+from scipy.stats import wasserstein_distance, linregress
+from scipy.optimize import curve_fit
 
 import sklearn.metrics
+from sklearn.linear_model import LinearRegression
 
 import time
 import logging
 
 # from jetnet.datasets.normalisations import FeaturewiseLinearBounded
-
-rng = np.random.default_rng()
 
 
 def normalise_features(X: ArrayLike, Y: ArrayLike = None):
@@ -39,23 +40,20 @@ def multi_batch_evaluation(
     timing: bool = False,
     **metric_args,
 ):
-    if normalise:
-        X, Y = normalise_features(X, Y)
-
     np.random.seed(seed)
 
     times = []
 
     vals = []
     for _ in range(num_batches):
-        rand1 = rng.choice(len(X), size=batch_size)
-        rand2 = rng.choice(len(Y), size=batch_size)
+        rand1 = np.random.choice(len(X), size=batch_size)
+        rand2 = np.random.choice(len(Y), size=batch_size)
 
         rand_sample1 = X[rand1]
         rand_sample2 = Y[rand2]
 
         t0 = time.time()
-        val = metric(rand_sample1, rand_sample2, **metric_args)
+        val = metric(rand_sample1, rand_sample2, normalise=normalise, **metric_args)
         t1 = time.time()
         vals.append(val)
         times.append(t1 - t0)
@@ -63,6 +61,132 @@ def multi_batch_evaluation(
     mean_std = (np.mean(vals, axis=0), np.std(vals, axis=0))
 
     return (mean_std, times) if timing else mean_std
+
+
+# based on https://github.com/mchong6/FID_IS_infinity/blob/master/score_infinity.py
+def one_over_n_extrapolation(
+    X: ArrayLike,
+    Y: ArrayLike,
+    metric: Callable,
+    min_samples: int = 5_000,
+    max_samples: int = 50_000,
+    num_batches: int = 10,
+    num_points: int = 15,
+    seed: int = 42,
+    normalise: bool = True,
+    **metric_args,
+):
+    if normalise:
+        X, Y = normalise_features(X, Y)
+
+    # Choose the number of images to evaluate FID_N at regular intervals over N
+    batches = np.linspace(min_samples, max_samples, num_points).astype("int32")
+
+    np.random.seed(seed)
+
+    vals = []
+
+    # Evaluate for different Ns
+    for batch_size in batches:
+        for _ in range(num_batches):
+            rand1 = np.random.choice(len(X), size=batch_size)
+            rand2 = np.random.choice(len(Y), size=batch_size)
+
+            rand_sample1 = X[rand1]
+            rand_sample2 = Y[rand2]
+
+            val = metric(rand_sample1, rand_sample2, normalise=False, **metric_args)
+            vals.append(val)
+
+    vals = np.array(vals)
+
+    # return vals
+
+    # Fit linear regression
+    result = linregress(1 / np.repeat(batches, num_batches), vals)
+    return [
+        result.intercept,
+        result.intercept_stderr,
+        np.repeat(batches, num_batches),
+        vals,
+        result.slope,
+    ]
+
+
+def linear(x, intercept, slope):
+    return intercept + slope * x
+
+
+def _average_batches(X, Y, metric, batch_size, num_batches, seed):
+    np.random.seed(seed)
+
+    vals_point = []
+    for _ in range(num_batches):
+        rand1 = np.random.choice(len(X), size=batch_size)
+        rand2 = np.random.choice(len(Y), size=batch_size)
+
+        rand_sample1 = X[rand1]
+        rand_sample2 = Y[rand2]
+
+        val = metric(rand_sample1, rand_sample2, normalise=False)
+        vals_point.append(val)
+
+    return [np.mean(vals_point), np.std(vals_point)]
+
+
+# based on https://github.com/mchong6/FID_IS_infinity/blob/master/score_infinity.py
+def one_over_n_extrapolation_repeated_measurements(
+    X: ArrayLike,
+    Y: ArrayLike,
+    metric: Callable,
+    min_samples: int = 5_000,
+    max_samples: int = 50_000,
+    num_batches: int = 10,
+    num_points: int = 200,
+    seed: int = 42,
+    normalise: bool = True,
+    **metric_args,
+):
+    if normalise:
+        X, Y = normalise_features(X, Y)
+
+    # Choose the number of images to evaluate FID_N at regular intervals over N
+    batches = (1 / np.linspace(1.0 / min_samples, 1.0 / max_samples, num_points)).astype("int32")
+    # batches = np.linspace(min_samples, max_samples, num_points).astype("int32")
+
+    assert num_batches >= 5, "Needs at least 5 estimates per point"
+
+    # num_batches = np.linspace(2 * num_batches - 5, 5, num_points).astype("int32")
+
+    # print(num_batches)
+
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        threads = []
+
+        # Evaluate for different Ns
+        for i, batch_size in enumerate(batches):
+            threads.append(
+                executor.submit(
+                    _average_batches, X, Y, metric, batch_size, num_batches, seed + i * 1000
+                )
+            )
+
+        vals = [t.result() for t in threads]
+
+    vals = np.array(vals)
+
+    # return [batches, vals]
+
+    params, covs = curve_fit(linear, 1 / batches, vals[:, 0], bounds=([0, 0], [np.inf, np.inf]))
+
+    return [params[0], np.sqrt(np.diag(covs)[0])]  # , batches, vals]
+
+
+# with ThreadPoolExecutor(max_workers=2) as executor:
+#     a = executor.submit(get_yields, cuts_list[:1], sig_events, bg_events)
+#     b = executor.submit(get_yields, cuts_list[1:], sig_events, bg_events)
+
+#     yields = a.result() + b.result()
 
 
 def wasserstein1d(X: ArrayLike, Y: ArrayLike, normalise: bool = True) -> float:

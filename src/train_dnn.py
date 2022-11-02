@@ -1,11 +1,11 @@
 import logging
+from operator import neg
 
 import torch
 from torch.utils.data import Dataset, DataLoader
+from torch import nn
 import numpy as np
 from scipy.special import softmax
-
-from pnet.particlenet import ParticleNet
 
 import matplotlib.pyplot as plt
 
@@ -17,7 +17,8 @@ from os.path import exists, dirname, realpath
 
 from sklearn.metrics import confusion_matrix, roc_curve, auc
 
-from jetnet.datasets import JetNet
+from numpy.typing import ArrayLike
+import pickle
 
 plt.switch_backend("agg")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -193,29 +194,33 @@ def parse_args():
     return args
 
 
+def normalise_features(X: ArrayLike, Y: ArrayLike = None):
+    maxes = np.max(np.abs(X), axis=0)
+
+    return (X / maxes, Y / maxes) if Y is not None else X / maxes
+
+
 class JetsClassifierDataset(Dataset):
-    def __init__(self, jetnet_dir: str, dir_path: str, test_jets: str, train: bool = True):
+    def __init__(self, dir_path: str, test_jets: str, train: bool = True):
         """True jets assigned label 1, test jets assigned label 0"""
         num_train = 100_000
         num_test = 50_000
-        truth_jets_pf = JetNet.getData(
-            "g",
-            data_dir=jetnet_dir,
-            particle_features=["etarel", "phirel", "ptrel"],
-            jet_features=None,
-            split_fraction=[0.7, 0.3, 0],
-            split="train" if train else "valid",
-        )[0][: num_train if train else num_test]
 
-        test_jets_pf = np.load(f"{dir_path}/distorted_jets/{test_jets}.npy").astype(np.float32)
-        test_jets_pf = (
-            test_jets_pf[:num_train] if train else test_jets_pf[num_train : num_train + num_test]
+        true_jets = np.load(f"{dir_path}/distorted_jets/efps_true.npy").astype(np.float32)
+
+        with open(f"{dir_path}/distorted_jets/sample_efps.pkl", "rb") as f:
+            efps_dict = pickle.load(f)
+            test_jets = efps_dict[test_jets].astype(np.float32)
+
+        true_jets, test_jets = normalise_features(true_jets, test_jets)
+
+        true_jets = true_jets[:num_train] if train else true_jets[num_train : num_train + num_test]
+        test_jets = test_jets[:num_train] if train else test_jets[num_train : num_train + num_test]
+
+        self.X = np.concatenate((true_jets, test_jets), axis=0)
+        self.Y = np.concatenate((np.ones(len(true_jets)), np.zeros(len(test_jets))), axis=0).astype(
+            int
         )
-
-        self.X = JetNet.fpnd_norm(np.concatenate((truth_jets_pf, test_jets_pf), axis=0))
-        self.Y = np.concatenate(
-            (np.ones(len(truth_jets_pf)), np.zeros(len(test_jets_pf))), axis=0
-        ).astype(int)
 
         logging.info("X shape: " + str(self.X.shape))
         logging.info("Y shape: " + str(self.Y.shape))
@@ -284,16 +289,19 @@ def init(args):
 def main(args):
     args = init(args)
 
-    train_dataset = JetsClassifierDataset(
-        args.jetnet_dir, args.dir_path, args.test_jets, train=True
-    )
-    test_dataset = JetsClassifierDataset(
-        args.jetnet_dir, args.dir_path, args.test_jets, train=False
-    )
+    train_dataset = JetsClassifierDataset(args.dir_path, args.test_jets, train=True)
+    test_dataset = JetsClassifierDataset(args.dir_path, args.test_jets, train=False)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size)
 
-    C = ParticleNet(args.num_hits, args.node_feat_size, num_classes=2).to(args.device)
+    C = nn.Sequential(
+        nn.Linear(36, 128),
+        nn.LeakyReLU(negative_slope=0.2),
+        nn.Linear(128, 128),
+        nn.LeakyReLU(negative_slope=0.2),
+        nn.Linear(128, 2),
+        nn.Sigmoid(),
+    ).to(args.device)
 
     if args.load_model:
         C = torch.load(args.model_path + args.name + "/C_" + str(args.start_epoch) + ".pt").to(
