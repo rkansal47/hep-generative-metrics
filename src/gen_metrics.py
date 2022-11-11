@@ -102,12 +102,12 @@ def multi_batch_evaluation_mmd(
         X, Y = normalise_features(X, Y)
 
     num_batches = 10
-    
+
     # vals = []
     # for _ in range(num_batches):
     #     rand1 = np.random.choice(len(X), size=batch_size)
     #     rand2 = np.random.choice(len(Y), size=batch_size)
-    
+
     #     rand_sample1 = X[rand1]
     #     rand_sample2 = Y[rand2]
 
@@ -441,6 +441,7 @@ def mmd_gaussian_quadratic_unbiased(
     # this can maybe be optimized - only need to calculate half of these
     XX, YY, XY = _get_mmd_quadratic_arrays(X, Y, sklearn.metrics.pairwise.rbf_kernel, gamma=gamma)
     return _mmd_quadratic_unbiased(XX, YY, XY)
+
 
 @njit
 def mmd_poly_quadratic_unbiased(
