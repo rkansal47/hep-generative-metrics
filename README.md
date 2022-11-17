@@ -1,1 +1,1 @@
-# python-template
+# Experiments on evaluation metrics for HEP
