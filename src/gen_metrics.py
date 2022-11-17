@@ -73,8 +73,45 @@ def multi_batch_evaluation(
     return (mean_std, times) if timing else mean_std
 
 
+def multi_batch_evaluation_median(
+    X: ArrayLike,
+    Y: ArrayLike,
+    num_batches: int,
+    batch_size: int,
+    metric: Callable,
+    seed: int = 42,
+    normalise: bool = True,
+    timing: bool = False,
+    **metric_args,
+):
+    np.random.seed(seed)
+
+    if normalise:
+        X, Y = normalise_features(X, Y)
+
+    times = []
+
+    vals = []
+    for _ in range(num_batches):
+        rand1 = np.random.choice(len(X), size=batch_size)
+        rand2 = np.random.choice(len(Y), size=batch_size)
+
+        rand_sample1 = X[rand1]
+        rand_sample2 = Y[rand2]
+
+        t0 = time.time()
+        val = metric(rand_sample1, rand_sample2, normalise=False, **metric_args)
+        t1 = time.time()
+        vals.append(val)
+        times.append(t1 - t0)
+
+    median_err = [np.median(vals), iqr(vals, rng=(16.275, 83.725)) / 2]
+
+    return (median_err, times) if timing else median_err
+
+
 # @njit
-def _average_batches_mmd(X, Y, num_batches, batch_size, seed):
+def _average_batches_mmd(X, Y, num_batches, batch_size, seed, degree=4):
     vals_point = []
     for i in range(num_batches):
         np.random.seed(seed + i * 1000)
@@ -84,7 +121,7 @@ def _average_batches_mmd(X, Y, num_batches, batch_size, seed):
         rand_sample1 = X[rand1]
         rand_sample2 = Y[rand2]
 
-        val = mmd_poly_quadratic_unbiased(rand_sample1, rand_sample2, normalise=False, degree=4)
+        val = mmd_poly_quadratic_unbiased(rand_sample1, rand_sample2, normalise=False, degree=degree)
         vals_point.append(val)
 
     return vals_point
@@ -93,10 +130,11 @@ def _average_batches_mmd(X, Y, num_batches, batch_size, seed):
 def multi_batch_evaluation_mmd(
     X: ArrayLike,
     Y: ArrayLike,
-    num_batches: int,
-    batch_size: int,
+    num_batches: int = 10,
+    batch_size: int = 5000,
     seed: int = 42,
     normalise: bool = True,
+    degree: int = 4,
 ):
     if normalise:
         X, Y = normalise_features(X, Y)
@@ -117,11 +155,11 @@ def multi_batch_evaluation_mmd(
     # mean_std = (np.mean(vals, axis=0), np.std(vals, axis=0))
 
     # return _average_batches_mmd(X, Y, num_batches, batch_size, seed)
-    vals_point = _average_batches_mmd(X, Y, num_batches, batch_size, seed)
+    vals_point = _average_batches_mmd(X, Y, num_batches, batch_size, seed, degree=degree)
 
-    return [np.median(vals_point), iqr(vals_point, rng=(16.275, 83.725))]
+    return [np.median(vals_point), iqr(vals_point, rng=(16.275, 83.725)) / 2]
 
-    return [np.mean(vals_point), np.std(vals_point)]
+    # return [np.mean(vals_point), np.std(vals_point)]
 
 
 # based on https://github.com/mchong6/FID_IS_infinity/blob/master/score_infinity.py
@@ -132,7 +170,7 @@ def one_over_n_extrapolation(
     min_samples: int = 5_000,
     max_samples: int = 50_000,
     num_batches: int = 10,
-    num_points: int = 15,
+    num_points: int = 200,
     seed: int = 42,
     normalise: bool = True,
     **metric_args,
@@ -383,7 +421,7 @@ def _poly_kernel_elementwise(X: ArrayLike, Y: ArrayLike, degree: int) -> np.ndar
     return (np.sum(X * Y, axis=-1) * gamma + 1.0) ** degree
 
 
-@njit
+# @njit
 def _get_mmd_quadratic_arrays(X: ArrayLike, Y: ArrayLike, kernel_func: Callable, **kernel_args):
     XX = kernel_func(X, X, **kernel_args)
     YY = kernel_func(Y, Y, **kernel_args)
