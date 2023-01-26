@@ -147,7 +147,7 @@ def multi_batch_evaluation_mmd(
     t0 = time.time()
     vals_point = _average_batches_mmd(X, Y, num_batches, batch_size, seed, degree=degree)
     t1 = time.time()
-    
+
     med_err = [np.median(vals_point), iqr(vals_point, rng=(16.275, 83.725)) / 2]
 
     return (med_err, t1 - t0) if timing else med_err
@@ -243,7 +243,9 @@ def one_over_n_extrapolation_repeated_measurements(
 
     # Choose the number of images to evaluate FID_N at regular intervals over N
     if inverse_intervals:
-        batches = (1 / np.linspace(1.0 / min_samples, 1.0 / max_samples, num_points)).astype("int32")
+        batches = (1 / np.linspace(1.0 / min_samples, 1.0 / max_samples, num_points)).astype(
+            "int32"
+        )
     else:
         batches = np.linspace(min_samples, max_samples, num_points).astype("int32")
 
