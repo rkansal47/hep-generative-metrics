@@ -121,7 +121,9 @@ def _average_batches_mmd(X, Y, num_batches, batch_size, seed, degree=4):
         rand_sample1 = X[rand1]
         rand_sample2 = Y[rand2]
 
-        val = mmd_poly_quadratic_unbiased(rand_sample1, rand_sample2, normalise=False, degree=degree)
+        val = mmd_poly_quadratic_unbiased(
+            rand_sample1, rand_sample2, normalise=False, degree=degree
+        )
         vals_point.append(val)
 
     return vals_point
