@@ -135,29 +135,20 @@ def multi_batch_evaluation_mmd(
     seed: int = 42,
     normalise: bool = True,
     degree: int = 4,
+    timing: bool = False,
 ):
     if normalise:
         X, Y = normalise_features(X, Y)
 
     num_batches = 10
 
-    # vals = []
-    # for _ in range(num_batches):
-    #     rand1 = np.random.choice(len(X), size=batch_size)
-    #     rand2 = np.random.choice(len(Y), size=batch_size)
-
-    #     rand_sample1 = X[rand1]
-    #     rand_sample2 = Y[rand2]
-
-    #     val = mmd_poly_quadratic_unbiased(rand_sample1, rand_sample2, normalise=False, degree=4)
-    #     vals.append(val)
-
-    # mean_std = (np.mean(vals, axis=0), np.std(vals, axis=0))
-
-    # return _average_batches_mmd(X, Y, num_batches, batch_size, seed)
+    t0 = time.time()
     vals_point = _average_batches_mmd(X, Y, num_batches, batch_size, seed, degree=degree)
+    t1 = time.time()
+    
+    med_err = [np.median(vals_point), iqr(vals_point, rng=(16.275, 83.725)) / 2]
 
-    return [np.median(vals_point), iqr(vals_point, rng=(16.275, 83.725)) / 2]
+    return (med_err, t1 - t0) if timing else med_err
 
     # return [np.mean(vals_point), np.std(vals_point)]
 
@@ -167,10 +158,10 @@ def one_over_n_extrapolation(
     X: ArrayLike,
     Y: ArrayLike,
     metric: Callable,
-    min_samples: int = 5_000,
+    min_samples: int = 20_000,
     max_samples: int = 50_000,
-    num_batches: int = 10,
-    num_points: int = 200,
+    num_batches: int = 20,
+    num_points: int = 10,
     seed: int = 42,
     normalise: bool = True,
     **metric_args,
@@ -236,47 +227,31 @@ def _average_batches(X, Y, metric, batch_size, num_batches, seed):
 def one_over_n_extrapolation_repeated_measurements(
     X: ArrayLike,
     Y: ArrayLike,
-    min_samples: int = 5_000,
+    min_samples: int = 20_000,
     max_samples: int = 50_000,
-    num_batches: int = 10,
-    num_points: int = 200,
+    num_batches: int = 20,
+    num_points: int = 10,
     seed: int = 42,
     normalise: bool = True,
+    inverse_intervals: bool = True,
+    timing: bool = False,
 ):
     if normalise:
         X, Y = normalise_features(X, Y)
 
     # Choose the number of images to evaluate FID_N at regular intervals over N
-    batches = (1 / np.linspace(1.0 / min_samples, 1.0 / max_samples, num_points)).astype("int32")
-    # batches = np.linspace(min_samples, max_samples, num_points).astype("int32")
+    if inverse_intervals:
+        batches = (1 / np.linspace(1.0 / min_samples, 1.0 / max_samples, num_points)).astype("int32")
+    else:
+        batches = np.linspace(min_samples, max_samples, num_points).astype("int32")
 
     # assert num_batches >= 5, "Needs at least 5 estimates per point"
 
     np.random.seed(seed)
 
-    # num_batches = np.linspace(2 * num_batches - 5, 5, num_points).astype("int32")
-
-    # print(num_batches)
-
     vals = []
 
-    # with ThreadPoolExecutor() as executor:
-    #     for i, batch_size in tqdm(enumerate(batches)):
-    #         val_points = []
-    #         for _ in range(num_batches):
-    #             rand1 = np.random.choice(len(X), size=batch_size)
-    #             rand2 = np.random.choice(len(Y), size=batch_size)
-
-    #             rand_sample1 = X[rand1]
-    #             rand_sample2 = Y[rand2]
-
-    #             val = executor.submit(metric, rand_sample1, rand_sample2, normalise=False)
-    #             val_points.append(val)
-
-    #         # val_points = [v.result() for v in val_points]
-    #         vals.append(val_points)
-
-    # vals = np.array([np.mean([v.result() for v in val_points]) for val_points in vals])
+    t0 = time.time()
 
     for i, batch_size in enumerate(batches):
         val_points = []
@@ -295,17 +270,16 @@ def one_over_n_extrapolation_repeated_measurements(
             val = _calculate_frechet_distance(mu1, sigma1, mu2, sigma2)
             val_points.append(val)
 
-        # val_points = [v.result() for v in val_points]
         vals.append(np.mean(val_points))
-
-    # vals = np.array(vals)
-
-    # return [batches, vals]
 
     params, covs = curve_fit(linear, 1 / batches, vals, bounds=([0, 0], [np.inf, np.inf]))
 
-    return [params[0], np.sqrt(np.diag(covs)[0]), batches, vals, params[1]]  #
-    return [params[0], np.sqrt(np.diag(covs)[0])]  # , batches, vals, params[1]]  #
+    t1 = time.time()
+
+    res = [params[0], np.sqrt(np.diag(covs)[0]), batches, vals, params[1]]
+
+    return res if not timing else (res[:2], t1 - t0)
+    return res[:2]  # , batches, vals, params[1]]  #
 
 
 def wasserstein1d(X: ArrayLike, Y: ArrayLike, normalise: bool = True) -> float:
