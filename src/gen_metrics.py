@@ -463,7 +463,6 @@ def mmd_gaussian_quadratic_unbiased(
 def mmd_poly_quadratic_unbiased(
     X: ArrayLike, Y: ArrayLike, degree: int = 3, normalise: bool = True
 ) -> float:
-
     # if normalise:
     #     X, Y = normalise_features(X, Y)
 
