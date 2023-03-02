@@ -32,6 +32,7 @@ from numba import jit, njit, prange
 
 def normalise_features(X: ArrayLike, Y: ArrayLike = None) -> ArrayLike:
     maxes = np.max(np.abs(X), axis=0)
+    maxes[maxes == 0] = 1  # don't normalise in case of features which are just 0
 
     return (X / maxes, Y / maxes) if Y is not None else X / maxes
 
